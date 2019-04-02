@@ -46,71 +46,71 @@ public final class EmulatorDetector {
     }
 
     private static final String[] PHONE_NUMBERS = {
-        "15555215554", "15555215556", "15555215558", "15555215560", "15555215562", "15555215564",
-        "15555215566", "15555215568", "15555215570", "15555215572", "15555215574", "15555215576",
-        "15555215578", "15555215580", "15555215582", "15555215584"
+            "15555215554", "15555215556", "15555215558", "15555215560", "15555215562", "15555215564",
+            "15555215566", "15555215568", "15555215570", "15555215572", "15555215574", "15555215576",
+            "15555215578", "15555215580", "15555215582", "15555215584"
     };
 
     private static final String[] DEVICE_IDS = {
-        "000000000000000",
-        "e21833235b6eef10",
-        "012345678912345"
+            "000000000000000",
+            "e21833235b6eef10",
+            "012345678912345"
     };
 
     private static final String[] IMSI_IDS = {
-        "310260000000000"
+            "310260000000000"
     };
 
     private static final String[] GENY_FILES = {
-        "/dev/socket/genyd",
-        "/dev/socket/baseband_genyd"
+            "/dev/socket/genyd",
+            "/dev/socket/baseband_genyd"
     };
 
     private static final String[] QEMU_DRIVERS = {"goldfish"};
 
     private static final String[] PIPES = {
-        "/dev/socket/qemud",
-        "/dev/qemu_pipe"
+            "/dev/socket/qemud",
+            "/dev/qemu_pipe"
     };
 
     private static final String[] X86_FILES = {
-        "ueventd.android_x86.rc",
-        "x86.prop",
-        "ueventd.ttVM_x86.rc",
-        "init.ttVM_x86.rc",
-        "fstab.ttVM_x86",
-        "fstab.vbox86",
-        "init.vbox86.rc",
-        "ueventd.vbox86.rc"
+            "ueventd.android_x86.rc",
+            "x86.prop",
+            "ueventd.ttVM_x86.rc",
+            "init.ttVM_x86.rc",
+            "fstab.ttVM_x86",
+            "fstab.vbox86",
+            "init.vbox86.rc",
+            "ueventd.vbox86.rc"
     };
 
     private static final String[] ANDY_FILES = {
-        "fstab.andy",
-        "ueventd.andy.rc"
+            "fstab.andy",
+            "ueventd.andy.rc"
     };
 
     private static final String[] NOX_FILES = {
-        "fstab.nox",
-        "init.nox.rc",
-        "ueventd.nox.rc"
+            "fstab.nox",
+            "init.nox.rc",
+            "ueventd.nox.rc"
     };
 
     private static final Property[] PROPERTIES = {
-        new Property("init.svc.qemud", null),
-        new Property("init.svc.qemu-props", null),
-        new Property("qemu.hw.mainkeys", null),
-        new Property("qemu.sf.fake_camera", null),
-        new Property("qemu.sf.lcd_density", null),
-        new Property("ro.bootloader", "unknown"),
-        new Property("ro.bootmode", "unknown"),
-        new Property("ro.hardware", "goldfish"),
-        new Property("ro.kernel.android.qemud", null),
-        new Property("ro.kernel.qemu.gles", null),
-        new Property("ro.kernel.qemu", "1"),
-        new Property("ro.product.device", "generic"),
-        new Property("ro.product.model", "sdk"),
-        new Property("ro.product.name", "sdk"),
-        new Property("ro.serialno", null)
+            new Property("init.svc.qemud", null),
+            new Property("init.svc.qemu-props", null),
+            new Property("qemu.hw.mainkeys", null),
+            new Property("qemu.sf.fake_camera", null),
+            new Property("qemu.sf.lcd_density", null),
+            new Property("ro.bootloader", "unknown"),
+            new Property("ro.bootmode", "unknown"),
+            new Property("ro.hardware", "goldfish"),
+            new Property("ro.kernel.android.qemud", null),
+            new Property("ro.kernel.qemu.gles", null),
+            new Property("ro.kernel.qemu", "1"),
+            new Property("ro.product.device", "generic"),
+            new Property("ro.product.model", "sdk"),
+            new Property("ro.product.name", "sdk"),
+            new Property("ro.serialno", null)
     };
 
     private static final String IP = "10.0.2.15";
@@ -121,9 +121,11 @@ public final class EmulatorDetector {
     private boolean isDebug = false;
     private boolean isTelephony = false;
     private boolean isCheckPackage = true;
+    private boolean isAdvancedTelephonyWithPermission = false;
     private List<String> mListPackageName = new ArrayList<>();
 
-    @SuppressLint("StaticFieldLeak") //Since we use application context now this won't leak memory anymore. This is only to please Lint
+    @SuppressLint("StaticFieldLeak")
+    //Since we use application context now this won't leak memory anymore. This is only to please Lint
     private static EmulatorDetector mEmulatorDetector;
 
     public static EmulatorDetector with(Context pContext) {
@@ -141,7 +143,7 @@ public final class EmulatorDetector {
         mListPackageName.add("com.bluestacks");
         mListPackageName.add("com.bignox.app");
     }
-    
+
     public EmulatorDetector setDebug(boolean isDebug) {
         this.isDebug = isDebug;
         return this;
@@ -161,6 +163,13 @@ public final class EmulatorDetector {
 
     public EmulatorDetector setCheckTelephony(boolean telephony) {
         this.isTelephony = telephony;
+        this.isAdvancedTelephonyWithPermission = false;
+        return this;
+    }
+
+    public EmulatorDetector setCheckTelephony(boolean telephony, boolean isAdvancedWithPermission) {
+        this.isTelephony = telephony;
+        this.isAdvancedTelephonyWithPermission = isAdvancedWithPermission;
         return this;
     }
 
@@ -201,18 +210,16 @@ public final class EmulatorDetector {
 
         log(getDeviceInfo());
 
-        // Check Basic
-        if (!result) {
-            result = checkBasic();
-            log("Check basic " + result);
-        }
-
         // Check Advanced
         if (!result) {
             result = checkAdvanced();
             log("Check Advanced " + result);
         }
-
+        // Check Basic
+        if (!result) {
+            result = checkBasic();
+            log("Check basic " + result);
+        }
         // Check Package Name
         if (!result) {
             result = checkPackageName();
@@ -224,22 +231,22 @@ public final class EmulatorDetector {
 
     private boolean checkBasic() {
         boolean result = Build.FINGERPRINT.startsWith("generic")
-            || Build.MODEL.contains("google_sdk")
-            || Build.MODEL.toLowerCase().contains("droid4x")
-            || Build.MODEL.contains("Emulator")
-            || Build.MODEL.contains("Android SDK built for x86")
-            || Build.MANUFACTURER.contains("Genymotion")
-            || Build.HARDWARE.equals("goldfish")
-            || Build.HARDWARE.equals("vbox86")
-            || Build.PRODUCT.equals("sdk")
-            || Build.PRODUCT.equals("google_sdk")
-            || Build.PRODUCT.equals("sdk_x86")
-            || Build.PRODUCT.equals("vbox86p")
-            || Build.BOARD.toLowerCase().contains("nox")
-            || Build.BOOTLOADER.toLowerCase().contains("nox")
-            || Build.HARDWARE.toLowerCase().contains("nox")
-            || Build.PRODUCT.toLowerCase().contains("nox")
-            || Build.SERIAL.toLowerCase().contains("nox");
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.toLowerCase().contains("droid4x")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.HARDWARE.equals("goldfish")
+                || Build.HARDWARE.equals("vbox86")
+                || Build.PRODUCT.equals("sdk")
+                || Build.PRODUCT.equals("google_sdk")
+                || Build.PRODUCT.equals("sdk_x86")
+                || Build.PRODUCT.equals("vbox86p")
+                || Build.BOARD.toLowerCase().contains("nox")
+                || Build.BOOTLOADER.toLowerCase().contains("nox")
+                || Build.HARDWARE.toLowerCase().contains("nox")
+                || Build.PRODUCT.toLowerCase().contains("nox")
+                || Build.SERIAL.toLowerCase().contains("nox");
 
         if (result) return true;
         result |= Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic");
@@ -250,13 +257,13 @@ public final class EmulatorDetector {
 
     private boolean checkAdvanced() {
         boolean result = checkTelephony()
-            || checkFiles(GENY_FILES,"Geny")
-            || checkFiles(ANDY_FILES,"Andy")
-            || checkFiles(NOX_FILES,"Nox")
-            || checkQEmuDrivers()
-            || checkFiles(PIPES,"Pipes")
-            || checkIp()
-            || (checkQEmuProps() && checkFiles(X86_FILES,"X86"));
+                || checkFiles(GENY_FILES, "Geny")
+                || checkFiles(ANDY_FILES, "Andy")
+                || checkFiles(NOX_FILES, "Nox")
+                || checkQEmuDrivers()
+                || checkFiles(PIPES, "Pipes")
+                || checkIp()
+                || (checkQEmuProps() && checkFiles(X86_FILES, "X86"));
         return result;
     }
 
@@ -278,19 +285,22 @@ public final class EmulatorDetector {
     }
 
     private boolean checkTelephony() {
-        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE)
-            == PackageManager.PERMISSION_GRANTED && this.isTelephony && isSupportTelePhony()) {
-            return checkPhoneNumber()
-                || checkDeviceId()
-                || checkImsi()
-                || checkOperatorNameAndroid();
+        if (this.isTelephony && isSupportTelePhony()) {
+            return
+                    isAdvancedTelephonyWithPermission
+                            && ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE)
+                            == PackageManager.PERMISSION_GRANTED
+                            && (checkPhoneNumber()
+                            || checkDeviceId()
+                            || checkImsi())
+                            || checkOperatorNameAndroid();
         }
         return false;
     }
 
     private boolean checkPhoneNumber() {
         TelephonyManager telephonyManager =
-            (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+                (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
 
         @SuppressLint("HardwareIds") String phoneNumber = telephonyManager.getLine1Number();
 
@@ -306,7 +316,7 @@ public final class EmulatorDetector {
 
     private boolean checkDeviceId() {
         TelephonyManager telephonyManager =
-            (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+                (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
 
         @SuppressLint("HardwareIds") String deviceId = telephonyManager.getDeviceId();
 
@@ -322,7 +332,7 @@ public final class EmulatorDetector {
 
     private boolean checkImsi() {
         TelephonyManager telephonyManager =
-            (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+                (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
         @SuppressLint("HardwareIds") String imsi = telephonyManager.getSubscriberId();
 
         for (String known_imsi : IMSI_IDS) {
@@ -336,7 +346,7 @@ public final class EmulatorDetector {
 
     private boolean checkOperatorNameAndroid() {
         String operatorName = ((TelephonyManager)
-            mContext.getSystemService(Context.TELEPHONY_SERVICE)).getNetworkOperatorName();
+                mContext.getSystemService(Context.TELEPHONY_SERVICE)).getNetworkOperatorName();
         if (operatorName.equalsIgnoreCase("android")) {
             log("Check operator name android is detected");
             return true;
@@ -389,7 +399,7 @@ public final class EmulatorDetector {
                 found_props++;
             }
             if ((property.seek_value != null)
-                && (property_value.contains(property.seek_value))) {
+                    && (property_value.contains(property.seek_value))) {
                 found_props++;
             }
 
@@ -405,7 +415,7 @@ public final class EmulatorDetector {
     private boolean checkIp() {
         boolean ipDetected = false;
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.INTERNET)
-            == PackageManager.PERMISSION_GRANTED) {
+                == PackageManager.PERMISSION_GRANTED) {
             String[] args = {"/system/bin/netcfg"};
             StringBuilder stringBuilder = new StringBuilder();
             try {
@@ -431,9 +441,9 @@ public final class EmulatorDetector {
                 String[] array = netData.split("\n");
 
                 for (String lan :
-                    array) {
+                        array) {
                     if ((lan.contains("wlan0") || lan.contains("tunl0") || lan.contains("eth0"))
-                        && lan.contains(IP)) {
+                            && lan.contains(IP)) {
                         ipDetected = true;
                         log("Check IP is detected");
                         break;
@@ -465,7 +475,7 @@ public final class EmulatorDetector {
     private boolean isSupportTelePhony() {
         PackageManager packageManager = mContext.getPackageManager();
         boolean isSupport = packageManager.hasSystemFeature(PackageManager.FEATURE_TELEPHONY);
-        log("Supported TelePhony: " + isSupport) ;
+        log("Supported TelePhony: " + isSupport);
         return isSupport;
     }
 
@@ -477,11 +487,11 @@ public final class EmulatorDetector {
 
     public static String getDeviceInfo() {
         return "Build.PRODUCT: " + Build.PRODUCT + "\n" +
-            "Build.MANUFACTURER: " + Build.MANUFACTURER + "\n" +
-            "Build.BRAND: " + Build.BRAND + "\n" +
-            "Build.DEVICE: " + Build.DEVICE + "\n" +
-            "Build.MODEL: " + Build.MODEL + "\n" +
-            "Build.HARDWARE: " + Build.HARDWARE + "\n" +
-            "Build.FINGERPRINT: " + Build.FINGERPRINT;
+                "Build.MANUFACTURER: " + Build.MANUFACTURER + "\n" +
+                "Build.BRAND: " + Build.BRAND + "\n" +
+                "Build.DEVICE: " + Build.DEVICE + "\n" +
+                "Build.MODEL: " + Build.MODEL + "\n" +
+                "Build.HARDWARE: " + Build.HARDWARE + "\n" +
+                "Build.FINGERPRINT: " + Build.FINGERPRINT;
     }
 }

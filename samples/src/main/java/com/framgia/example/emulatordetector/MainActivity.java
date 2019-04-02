@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         // KoPlayer
         // MEmu
 
-        MainActivityPermissionsDispatcher.checkEmulatorDetectorWithCheck(this);
+        //MainActivityPermissionsDispatcher.checkEmulatorDetectorWithCheck(this);
     }
 
     @NeedsPermission(Manifest.permission.READ_PHONE_STATE)
@@ -101,6 +101,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        MainActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
+        //MainActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 }
